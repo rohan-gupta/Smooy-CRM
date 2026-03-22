@@ -193,7 +193,7 @@ label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; 
 .loyaltyBgArt{
   position:absolute;
   inset:0;
-  background-image: url("/assets/loyalty-card-bg.png");
+  background-image: url("../public/assets/loyalty-card-bg.png");
   background-size: cover;
   background-position: center;
   opacity: 0;

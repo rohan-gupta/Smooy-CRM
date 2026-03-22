@@ -5,7 +5,7 @@ export default function Layout({ title, subtitle, children }) {
         <div className="brandRow" style={{ position: 'relative' }}>
           <img
             className="brandOverlayLogo"
-            src="/assets/smooy-overlay.png"
+            src={`${import.meta.env.BASE_URL}assets/smooy-overlay.png`}
             alt=""
             aria-hidden="true"
           />
