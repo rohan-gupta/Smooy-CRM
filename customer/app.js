@@ -1,9 +1,6 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
 const cfg = window.SMOOY_CRM_CONFIG || {};
 const storeSlug = cfg.STORE_SLUG;
 const storeDisplayName = cfg.STORE_DISPLAY_NAME;
-const mockMode = !!cfg.MOCK_MODE;
 
 const els = {
   storeTitle: document.getElementById("storeTitle"),
@@ -38,19 +35,8 @@ const els = {
   allRewardsList: document.getElementById("allRewardsList")
 };
 
-if (mockMode) {
-  els.storeTitle.textContent = storeDisplayName || "Smooy CRM";
-  els.storeSubtitle.textContent = "Welcome to the Smooy PRM Loyalty Club";
-} else if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !storeSlug) {
-  els.storeTitle.textContent = "CRM not configured";
-  els.storeSubtitle.textContent = "Edit shared/config.js first.";
-  els.viewLogin.style.display = "block";
-} else {
-  els.storeTitle.textContent = storeDisplayName || "Smooy CRM";
-  els.storeSubtitle.textContent = "Welcome to the Smooy PRM Loyalty Club";
-}
-
-const supabase = mockMode ? null : createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+els.storeTitle.textContent = storeDisplayName || "Smooy CRM";
+els.storeSubtitle.textContent = "Welcome to the Smooy PRM Loyalty Club";
 
 let pendingPhoneE164 = null;
 let currentUser = null;
@@ -145,62 +131,6 @@ function normalizeSingaporePhone(input) {
   // Also accept numbers prefixed with 0 (e.g., 097813023 -> +6597813023)
   if (digits.length === 9 && digits.startsWith("0")) return `+65${digits.slice(1)}`;
   throw new Error("Please enter a valid Singapore phone number.");
-}
-
-async function fetchStoreId() {
-  const { data, error } = await supabase
-    .from("stores")
-    .select("id")
-    .eq("slug", storeSlug)
-    .single();
-  if (error) throw error;
-  return data.id;
-}
-
-async function loadCustomerProfile() {
-  if (!currentUser || !storeId) return null;
-  const { data, error } = await supabase
-    .from("customer_profiles")
-    .select("id, auth_user_id, phone_e164, name, email, address, card_expires_at")
-    .eq("auth_user_id", currentUser.id)
-    .eq("store_id", storeId)
-    .single();
-  if (error) {
-    if (String(error.message || "").includes("0 rows")) return null;
-    // Supabase might return different error when not found; treat as missing.
-    return null;
-  }
-  return data;
-}
-
-async function upsertCustomerProfile(profile) {
-  const payload = {
-    store_id: storeId,
-    auth_user_id: currentUser.id,
-    phone_e164: profile.phone_e164,
-    name: profile.name,
-    email: profile.email || null,
-    address: profile.address || null
-  };
-
-  const { error } = await supabase.from("customer_profiles").upsert(payload, { onConflict: "auth_user_id" });
-  if (error) throw error;
-}
-
-async function loadRewardIssuances() {
-  if (!customerProfile || !storeId) return;
-  const { data, error } = await supabase
-    .from("reward_issuances")
-    .select("stamp_number, reward_title, redemption_status, revealed_at, redeemed_at, expired_at")
-    .eq("store_id", storeId)
-    .eq("customer_auth_user_id", customerProfile.auth_user_id)
-    .order("stamp_number", { ascending: true });
-  if (error) throw error;
-
-  rewardIssuancesByStamp = new Map();
-  for (const row of data || []) {
-    rewardIssuancesByStamp.set(row.stamp_number, row);
-  }
 }
 
 function renderStamps() {
@@ -391,147 +321,34 @@ function escapeHtml(s) {
 }
 
 async function handleSendOtp() {
-  if (mockMode) {
-    try {
-      const input = els.phoneInput.value || cfg.MOCK_PHONE_E164 || "";
-      pendingPhoneE164 = normalizeSingaporePhone(input);
-      localStorage.setItem(LAST_PHONE_KEY, pendingPhoneE164);
-    } catch (e) {
-      showError(els.loginError, e.message || "Invalid phone number.");
-      return;
-    }
-    renderMockCard();
-    return;
-  }
-
   try {
-    showError(els.loginError, null);
-    pendingPhoneE164 = normalizeSingaporePhone(els.phoneInput.value);
+    const input = els.phoneInput.value || cfg.MOCK_PHONE_E164 || "";
+    pendingPhoneE164 = normalizeSingaporePhone(input);
     localStorage.setItem(LAST_PHONE_KEY, pendingPhoneE164);
+    showError(els.loginError, null);
   } catch (e) {
     showError(els.loginError, e.message || "Invalid phone number.");
     return;
   }
-
-  els.sendOtpBtn.disabled = true;
-  els.sendOtpBtn.textContent = "Sending...";
-
-  const { error } = await supabase.auth.signInWithOtp({
-    phone: pendingPhoneE164,
-    options: { channel: "sms" }
-  });
-  els.sendOtpBtn.disabled = false;
-  els.sendOtpBtn.textContent = "Send OTP";
-
-  if (error) {
-    showError(els.loginError, error.message || "Failed to send OTP.");
-    return;
-  }
-  setVisible("otp");
-  els.otpInput.focus();
+  renderMockCard();
 }
 
 async function handleVerifyOtp() {
-  if (mockMode) {
-    renderMockCard();
-    return;
-  }
-
-  if (!pendingPhoneE164) {
-    pendingPhoneE164 = localStorage.getItem(LAST_PHONE_KEY);
-  }
-  els.verifyOtpBtn.disabled = true;
-  els.verifyOtpBtn.textContent = "Verifying...";
-  showError(els.otpError, null);
-
-  const token = String(els.otpInput.value || "").trim();
-  if (!token) {
-    showError(els.otpError, "Enter the OTP code.");
-    els.verifyOtpBtn.disabled = false;
-    els.verifyOtpBtn.textContent = "Verify";
-    return;
-  }
-
-  const { data, error } = await supabase.auth.verifyOtp({
-    phone: pendingPhoneE164,
-    token,
-    type: "sms"
-  });
-
-  els.verifyOtpBtn.disabled = false;
-  els.verifyOtpBtn.textContent = "Verify";
-
-  if (error) {
-    showError(els.otpError, error.message || "OTP verification failed.");
-    return;
-  }
-
-  currentUser = data?.user || (await supabase.auth.getUser()).data.user;
-  try {
-    storeId = await fetchStoreId();
-  } catch (e) {
-    showError(els.otpError, "Store not found. Seed the Supabase schema first.");
-    return;
-  }
-
-  customerProfile = await loadCustomerProfile();
-  if (customerProfile) {
-    setVisible("card");
-    els.customerNameLine.textContent = customerProfile.name;
-    await loadRewardIssuances();
-    renderStamps();
-  } else {
-    els.nameInput.value = "";
-    els.emailInput.value = "";
-    els.addressInput.value = "";
-    setVisible("profile");
-  }
+  renderMockCard();
 }
 
 async function handleSaveProfile() {
-  if (mockMode) {
-    // In test mode we don't persist anything; just show the mock card.
-    renderMockCard();
-    return;
-  }
-
   showError(els.profileError, null);
   const name = String(els.nameInput.value || "").trim();
   if (!name) {
     showError(els.profileError, "Name is required.");
     return;
   }
-
-  const email = String(els.emailInput.value || "").trim();
-  const address = String(els.addressInput.value || "").trim();
-  const phoneE164 = pendingPhoneE164 || null;
-  if (!phoneE164) {
-    showError(els.profileError, "Please log in again (phone missing).");
-    return;
-  }
-
-  try {
-    await upsertCustomerProfile({
-      phone_e164: phoneE164,
-      name,
-      email: email || null,
-      address: address || null
-    });
-  } catch (e) {
-    showError(els.profileError, e.message || "Could not save profile.");
-    return;
-  }
-
-  customerProfile = await loadCustomerProfile();
-  els.customerNameLine.textContent = customerProfile.name;
-  setVisible("card");
-
-  await loadRewardIssuances();
-  renderStamps();
+  if (cfg.MOCK_CUSTOMER_NAME !== undefined) cfg.MOCK_CUSTOMER_NAME = name;
+  renderMockCard();
 }
 
 async function handleLogout() {
-  if (!mockMode && supabase) await supabase.auth.signOut();
   currentUser = null;
   customerProfile = null;
   rewardIssuancesByStamp = new Map();
@@ -556,25 +373,6 @@ function wireUpUi() {
 async function bootstrap() {
   wireUpUi();
   setVisible("login");
-
-  if (mockMode) return;
-
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return;
-
-  currentUser = data.session.user;
-  pendingPhoneE164 = localStorage.getItem(LAST_PHONE_KEY);
-  storeId = await fetchStoreId();
-  customerProfile = await loadCustomerProfile();
-  if (!customerProfile) {
-    setVisible("profile");
-    return;
-  }
-
-  els.customerNameLine.textContent = customerProfile.name;
-  setVisible("card");
-  await loadRewardIssuances();
-  renderStamps();
 }
 
 bootstrap().catch((e) => {

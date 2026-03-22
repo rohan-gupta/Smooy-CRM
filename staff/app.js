@@ -1,9 +1,6 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
 const cfg = window.SMOOY_CRM_CONFIG || {};
 const storeSlug = cfg.STORE_SLUG;
 const storeDisplayName = cfg.STORE_DISPLAY_NAME;
-const mockMode = !!cfg.MOCK_MODE;
 
 const REWARD_TITLES_BY_STAMP = {
   1: "Free Topping (Single topping)",
@@ -49,8 +46,6 @@ const els = {
   stampsGrid: document.getElementById("stampsGrid"),
   rewardActionList: document.getElementById("rewardActionList")
 };
-
-const supabase = mockMode ? null : createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let storeId = null;
@@ -112,51 +107,6 @@ function escapeHtml(s) {
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
-}
-
-async function fetchStoreId() {
-  const { data, error } = await supabase
-    .from("stores")
-    .select("id")
-    .eq("slug", storeSlug)
-    .single();
-  if (error) throw error;
-  return data.id;
-}
-
-async function loadStaffMember() {
-  const { data, error } = await supabase
-    .from("staff_members")
-    .select("id, store_id, auth_user_id")
-    .eq("auth_user_id", currentUser.id)
-    .single();
-  if (error) return null;
-  return data;
-}
-
-async function loadCustomerByPhone(phoneE164) {
-  const { data, error } = await supabase
-    .from("customer_profiles")
-    .select("id, auth_user_id, phone_e164, name, email, address")
-    .eq("store_id", storeId)
-    .eq("phone_e164", phoneE164)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data || null;
-}
-
-async function loadRewardIssuances(customerAuthUserId) {
-  const { data, error } = await supabase
-    .from("reward_issuances")
-    .select("stamp_number, reward_title, redemption_status, revealed_at, redeemed_at, expired_at")
-    .eq("store_id", storeId)
-    .eq("customer_auth_user_id", customerAuthUserId)
-    .order("stamp_number", { ascending: true });
-  if (error) throw error;
-
-  rewardIssuancesByStamp = new Map();
-  for (const row of data || []) rewardIssuancesByStamp.set(row.stamp_number, row);
 }
 
 function renderStamps() {
@@ -237,109 +187,46 @@ async function grantNextStamp() {
   showError(els.grantError, null);
   if (!customerProfile) return;
 
-  if (mockMode) {
-    const revealed = [...rewardIssuancesByStamp.keys()].sort((a, b) => a - b);
-    const maxStamp = revealed.length ? Math.max(...revealed) : 0;
-    const nextStamp = maxStamp + 1;
-    if (nextStamp > 10) return;
-    if (!revealed.length && nextStamp !== 1) return;
-    if (revealed.length && maxStamp !== revealed.length) {
-      // Sequential rule guard
-      showError(els.grantError, "Stamps must be granted sequentially.");
-      return;
-    }
-
-    // Add the next stamp with default "available" status.
-    mockRevealedStamps = [...new Set([...mockRevealedStamps, nextStamp])].sort((a, b) => a - b);
-    buildMockRewardIssuances();
-    afterStampMutation();
+  const revealed = [...rewardIssuancesByStamp.keys()].sort((a, b) => a - b);
+  const maxStamp = revealed.length ? Math.max(...revealed) : 0;
+  const nextStamp = maxStamp + 1;
+  if (nextStamp > 10) return;
+  if (!revealed.length && nextStamp !== 1) return;
+  if (revealed.length && maxStamp !== revealed.length) {
+    showError(els.grantError, "Stamps must be granted sequentially.");
     return;
   }
 
-  els.grantStampBtn.disabled = true;
-  els.grantStampBtn.textContent = "Granting...";
-
-  try {
-    const { data, error } = await supabase.rpc("grant_stamp", {
-      p_store_slug: storeSlug,
-      p_customer_auth_user_id: customerProfile.auth_user_id
-    });
-
-    if (error) throw error;
-    await afterStampMutation();
-  } catch (e) {
-    showError(els.grantError, e.message || "Failed to grant stamp.");
-    els.grantStampBtn.disabled = false;
-  }
+  mockRevealedStamps = [...new Set([...mockRevealedStamps, nextStamp])].sort((a, b) => a - b);
+  buildMockRewardIssuances();
+  afterStampMutation();
 }
 
 async function redeemStamp(status, stampNumber) {
   if (!customerProfile) return;
   showError(els.grantError, null);
 
-  if (mockMode) {
-    if (!rewardIssuancesByStamp.has(stampNumber)) return;
-    // Only allow the states the backend supports.
-    if (status !== "Redeemed" && status !== "Expired") return;
-    mockStatusMap = { ...mockStatusMap, [stampNumber]: status };
-    buildMockRewardIssuances();
-    afterStampMutation();
-    return;
-  }
-
-  const btns = document.querySelectorAll(`button[data-action="${status}"][data-stamp="${stampNumber}"]`);
-  btns.forEach((b) => (b.disabled = true));
-
-  try {
-    const { data, error } = await supabase.rpc("set_redemption_status", {
-      p_store_slug: storeSlug,
-      p_customer_auth_user_id: customerProfile.auth_user_id,
-      p_stamp_number: stampNumber,
-      p_status: status
-    });
-    if (error) throw error;
-    await afterStampMutation();
-  } catch (e) {
-    showError(els.grantError, e.message || "Failed to update redemption status.");
-  } finally {
-    btns.forEach((b) => (b.disabled = false));
-  }
+  if (!rewardIssuancesByStamp.has(stampNumber)) return;
+  if (status !== "Redeemed" && status !== "Expired") return;
+  mockStatusMap = { ...mockStatusMap, [stampNumber]: status };
+  buildMockRewardIssuances();
+  afterStampMutation();
 }
 
-async function afterStampMutation() {
-  await loadRewardIssuances(customerProfile.auth_user_id);
+function afterStampMutation() {
   renderStamps();
   renderRewardActions();
 }
 
 async function handleLogin() {
   showError(els.loginError, null);
-  els.loginBtn.disabled = true;
-  els.loginBtn.textContent = "Logging in...";
-
-  try {
-    const email = String(els.emailInput.value || "").trim();
-    const password = String(els.passwordInput.value || "");
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    currentUser = data.user;
-
-    storeId = await fetchStoreId();
-    staffMember = await loadStaffMember();
-    if (!staffMember) throw new Error("This staff user is not configured in staff_members for this store.");
-    storeId = staffMember.store_id;
-
-    els.mainHeading.textContent = "Smooy";
-    els.mainSubHeading.textContent = storeDisplayName || "Pasir Ris Mall";
-    els.customerArea.style.display = "none";
-    setVisible("main");
-  } catch (e) {
-    showError(els.loginError, e.message || "Login failed.");
-    setVisible("login");
-  } finally {
-    els.loginBtn.disabled = false;
-    els.loginBtn.textContent = "Log in";
-  }
+  currentUser = { id: "mock-user" };
+  storeId = "mock-store";
+  staffMember = { id: "mock-staff", store_id: "mock-store" };
+  els.mainHeading.textContent = "Smooy";
+  els.mainSubHeading.textContent = storeDisplayName || "Pasir Ris Mall";
+  els.customerArea.style.display = "none";
+  setVisible("main");
 }
 
 async function handleSearchCustomer() {
@@ -353,21 +240,16 @@ async function handleSearchCustomer() {
 
   try {
     const phoneE164 = normalizeSingaporePhone(raw);
-    const found = await loadCustomerByPhone(phoneE164);
-    if (!found) {
-      els.customerArea.style.display = "none";
-      showError(els.searchError, "Customer not found. Ask them to enroll first.");
-      customerProfile = null;
-      rewardIssuancesByStamp = new Map();
-      return;
-    }
-
-    customerProfile = found;
-    els.customerName.textContent = found.name || "Customer";
+    customerProfile = {
+      name: cfg.MOCK_CUSTOMER_NAME || "Test Customer",
+      phone_e164: phoneE164,
+      auth_user_id: "mock-user"
+    };
+    els.customerName.textContent = customerProfile.name;
     els.customerPhoneLine.textContent = phoneE164;
     els.customerArea.style.display = "block";
 
-    await loadRewardIssuances(found.auth_user_id);
+    buildMockRewardIssuances();
     renderStamps();
     renderRewardActions();
   } catch (e) {
@@ -385,7 +267,6 @@ function clearCustomer() {
 }
 
 async function handleLogout() {
-  await supabase.auth.signOut();
   currentUser = null;
   staffMember = null;
   storeId = null;
@@ -396,53 +277,17 @@ async function handleLogout() {
 
 function wireUpUi() {
   els.loginBtn.addEventListener("click", handleLogin);
+  els.grantStampBtn.addEventListener("click", grantNextStamp);
   els.searchCustomerBtn.addEventListener("click", handleSearchCustomer);
   els.clearCustomerBtn.addEventListener("click", clearCustomer);
   els.logoutBtn.addEventListener("click", handleLogout);
 }
 
 async function bootstrap() {
-  setVisible("login");
   els.staffStoreTitle.textContent = storeDisplayName || "Smooy CRM";
   els.staffStoreSubtitle.textContent = "Welcome to the Smooy PRM Loyalty Club";
   wireUpUi();
-
-  if (mockMode) {
-    els.mainSubHeading.textContent = storeDisplayName || "Pasir Ris Mall";
-    currentUser = { id: "mock-user" };
-    storeId = "mock-store";
-    staffMember = { id: "mock-staff", store_id: "mock-store" };
-
-    customerProfile = {
-      name: cfg.MOCK_CUSTOMER_NAME || "Test Customer",
-      phone_e164: cfg.MOCK_PHONE_E164 || "+65",
-      auth_user_id: "mock-user"
-    };
-
-    // Build the visible card state.
-    buildMockRewardIssuances();
-
-    // Show main UI
-    els.customerName.textContent = customerProfile.name;
-    els.customerPhoneLine.textContent = customerProfile.phone_e164;
-    els.customerArea.style.display = "block";
-
-    setVisible("main");
-    renderStamps();
-    renderRewardActions();
-    return;
-  }
-
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return;
-
-  currentUser = data.session.user;
-  storeId = await fetchStoreId();
-  staffMember = await loadStaffMember();
-  if (!staffMember) return setVisible("login");
-  storeId = staffMember.store_id;
-  setVisible("main");
-  els.mainSubHeading.textContent = storeDisplayName || "Pasir Ris Mall";
+  setVisible("login");
 }
 
 bootstrap().catch((e) => {
