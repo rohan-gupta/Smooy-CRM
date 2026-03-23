@@ -1,24 +1,25 @@
-import { Link } from 'react-router-dom'
-import Layout from '../components/Layout'
-import { CONFIG } from '../config'
+import { Button, Stack, Text } from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { CONFIG } from '../config';
 
 export default function Home() {
   return (
     <Layout
-      title="Smooy Pasir Ris Mall"
+      title={CONFIG.STORE_DISPLAY_NAME}
       subtitle="Welcome to the Smooy PRM Loyalty Club"
     >
-      <section className="grid">
-        <Link className="btn btn-primary" to="/customer">
+      <Stack as="section" gap={3}>
+        <Button as={Link} to="/customer" colorPalette="pink" size="lg">
           Customer loyalty card
-        </Link>
-        <Link className="btn btn-ghost" to="/staff">
+        </Button>
+        <Button as={Link} to="/staff" variant="outline" colorPalette="pink" size="lg">
           Staff portal
-        </Link>
-      </section>
-      <footer className="fineprint">
+        </Button>
+      </Stack>
+      <Text as="footer" color="gray.600" fontSize="sm">
         Built for phone-first use. Staff actions are gated to staff auth accounts.
-      </footer>
+      </Text>
     </Layout>
-  )
+  );
 }

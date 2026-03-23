@@ -1,21 +1,40 @@
-export default function Layout({ title, subtitle, children }) {
+import {
+  Container,
+  Flex,
+  Heading,
+  Stack,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
+
+/**
+ * Base layout: optional title block + page content. Styling is Chakra tokens only.
+ */
+export default function Layout({ title, subtitle, children, headerActions }) {
+  const showHeader = title != null || subtitle != null;
+
   return (
-    <main className="wrap">
-      <header className="card brandHeaderWrap">
-        <div className="brandRow" style={{ position: 'relative' }}>
-          <img
-            className="brandOverlayLogo"
-            src={`${import.meta.env.BASE_URL}assets/smooy-overlay.png`}
-            alt=""
-            aria-hidden="true"
-          />
-          <div style={{ minWidth: 0 }}>
-            <div className="title">{title}</div>
-            <p className="subtitle">{subtitle}</p>
-          </div>
-        </div>
-      </header>
-      {children}
-    </main>
+    <Container as="main" maxW="md" px={4} py={6}>
+      <Stack gap={6}>
+        {showHeader && (
+          <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+            <VStack align="start" gap={1}>
+              {title != null && (
+                <Heading as="h1" size="lg">
+                  {title}
+                </Heading>
+              )}
+              {subtitle != null && (
+                <Text color="gray.600" fontSize="sm">
+                  {subtitle}
+                </Text>
+              )}
+            </VStack>
+            {headerActions}
+          </Flex>
+        )}
+        {children}
+      </Stack>
+    </Container>
   );
 }
