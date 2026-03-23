@@ -1,5 +1,5 @@
-import Layout from '../components/Layout';
-import LoginForm from '../components/LoginForm';
+import { Layout } from '../components/layout';
+import { LoginForm } from '../components/form';
 import { useInputValue } from '../hooks/useInputValue';
 
 export default function Login() {

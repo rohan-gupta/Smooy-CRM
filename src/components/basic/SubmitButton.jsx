@@ -10,20 +10,20 @@ const SubmitButton = forwardRef(function SubmitButton(
       ref={ref}
       type={type}
       w={w}
-      h="56px"
-      borderRadius="full"
-      fontWeight="bold"
-      fontSize="xl"
+      h="58px"
+      borderRadius="999px"
+      fontWeight="800"
+      fontSize="2xl"
       color="white"
-      bg="linear-gradient(to right, #ec4899, #db2777)"
+      bg="linear-gradient(180deg, #ff1f8f 0%, #e5007d 100%)"
       _hover={{
-        bg: 'linear-gradient(to right, #db2777, #be185d)',
+        bg: 'linear-gradient(180deg, #e5007d 0%, #be185d 100%)',
       }}
       _active={{
-        bg: 'linear-gradient(to right, #be185d, #9d174d)',
+        bg: 'linear-gradient(180deg, #be185d 0%, #9d174d 100%)',
         transform: 'scale(0.98)',
       }}
-      boxShadow="0 8px 24px rgba(219, 39, 119, 0.4)"
+      boxShadow="0 8px 18px rgba(229, 0, 125, 0.26)"
       {...props}
     >
       {children}

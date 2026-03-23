@@ -1,7 +1,6 @@
 import { HStack, Text } from '@chakra-ui/react';
 import FormCard from './FormCard';
-import InputBox from './InputBox';
-import SubmitButton from './SubmitButton';
+import { InputBox, SubmitButton } from '../basic';
 
 export default function OtpForm({ phone, code, onCodeChange, onSubmit, onResend, countdown }) {
   return (
@@ -18,14 +17,14 @@ export default function OtpForm({ phone, code, onCodeChange, onSubmit, onResend,
         withPrefix={false}
       />
       <SubmitButton onClick={onSubmit}>Confirm</SubmitButton>
-      <HStack justify="center" gap={1}>
-        <Text fontSize="sm" color="gray.500">Haven't received it?</Text>
+      <HStack justify="center" gap={2}>
+        <Text fontSize="sm" color="gray.600">Haven't received it?</Text>
         <Text
           as="button"
           fontSize="sm"
           fontWeight="bold"
           fontStyle="italic"
-          color="gray.700"
+          color="pink.500"
           onClick={onResend}
           cursor="pointer"
         >

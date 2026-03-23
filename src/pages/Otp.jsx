@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
-import Layout from '../components/Layout';
-import OtpForm from '../components/OtpForm';
+import { Layout } from '../components/layout';
+import { OtpForm } from '../components/form';
 import { useInputValue } from '../hooks/useInputValue';
 import { useCountdown } from '../hooks/useCountdown';
 

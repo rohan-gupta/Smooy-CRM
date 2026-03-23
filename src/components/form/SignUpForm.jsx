@@ -1,12 +1,12 @@
 import FormCard from './FormCard';
-import InputBox from './InputBox';
-import SubmitButton from './SubmitButton';
+import { InputBox, SubmitButton } from '../basic';
 
 export default function SignUpForm({ name, onNameChange, email, onEmailChange, dob, onDobChange, onSubmit }) {
   return (
     <FormCard
       title="Enter Your Details"
       subtitle="Please fill in the information below to create your loyalty account."
+      gap={3}
     >
       <InputBox
         value={name}
@@ -26,9 +26,8 @@ export default function SignUpForm({ name, onNameChange, email, onEmailChange, d
         value={dob}
         onChange={onDobChange}
         placeholder="Date of Birth"
-        inputMode="text"
-        withPrefix={false}
         type="date"
+        withPrefix={false}
       />
       <SubmitButton onClick={onSubmit}>Enroll</SubmitButton>
     </FormCard>

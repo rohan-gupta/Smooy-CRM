@@ -8,7 +8,9 @@ const InputBox = forwardRef(function InputBox(
     placeholder = 'Phone number',
     inputMode = 'tel',
     withPrefix = true,
+    prefixEmoji = '🇸🇬',
     prefixText = '+65',
+    rightIcon = null,
     ...props
   },
   ref
@@ -16,21 +18,25 @@ const InputBox = forwardRef(function InputBox(
   return (
     <Box
       w="full"
-      border="1.5px solid"
-      borderColor="pink.300"
-      borderRadius="16px"
-      bg="pink.50"
+      border="2px solid"
+      borderColor="rgba(240,138,197,0.55)"
+      borderRadius="18px"
+      bg="rgba(255,255,255,0.55)"
+      h="62px"
       px={4}
-      py={3}
     >
-      <HStack spacing={4} align="center">
+      <HStack spacing={4} align="center" h="full">
         {withPrefix && (
           <>
-            <Text fontWeight="400" fontSize="md">
+            <Text fontWeight="400" fontSize="xl" lineHeight="1">
+              {prefixEmoji}
+            </Text>
+
+            <Text fontWeight="700" fontSize="md" color="gray.700">
               {prefixText}
             </Text>
 
-            <Box w="1px" h="28px" bg="pink.300" opacity={0.8} />
+            <Box w="1px" h="28px" bg="rgba(93,72,94,0.18)" />
           </>
         )}
 
@@ -43,12 +49,22 @@ const InputBox = forwardRef(function InputBox(
           onChange={onChange}
           fontWeight="400"
           fontSize="md"
-          h="auto"
-          py={1}
+          h="full"
+          py={0}
           px={0}
           flex="1"
+          minW={0}
+          color="gray.700"
           {...props}
         />
+
+        {rightIcon ? (
+          <Box display="grid" placeItems="center" w="26px" color="pink.500">
+            <Text fontSize="xl" lineHeight="1">
+              {rightIcon}
+            </Text>
+          </Box>
+        ) : null}
       </HStack>
     </Box>
   )
