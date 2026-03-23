@@ -14,13 +14,13 @@ export default function FormCard({ title, subtitle, gap = 2, children }) {
     >
       <Stack gap={gap}>
         <Stack gap={1}>
-          <Heading as="h2" size="lg" fontWeight="bold" textAlign="center">
+          <Heading as="h2" fontSize="clamp(18px, 5.5vw, 24px)" fontWeight="bold" textAlign="center">
             {title}
           </Heading>
           {hasSubtitle ? (
             <>
               <Box h="1px" bg="gray.300" />
-              <Text fontSize="sm" color="gray.600" textAlign="center">
+              <Text fontSize="clamp(12px, 3.5vw, 15px)" color="gray.600" textAlign="center">
                 {subtitle}
               </Text>
             </>

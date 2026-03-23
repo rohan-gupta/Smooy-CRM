@@ -1,20 +1,19 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Layout } from '../components/layout';
-import { OtpForm } from '../components/form';
-import { useInputValue } from '../hooks/useInputValue';
-import { useCountdown } from '../hooks/useCountdown';
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Layout } from '../components/layout'
+import { OtpForm } from '../components/form'
+import { useInputValue } from '../hooks/useInputValue'
+import { useCountdown } from '../hooks/useCountdown'
 
 export default function Otp() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const phone = searchParams.get('phone') || '+65 XXXX XXXX';
-  const code = useInputValue('');
-  const countdown = useCountdown(60);
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const phone = searchParams.get('phone') || '+65 XXXX XXXX'
+  const code = useInputValue('')
+  const countdown = useCountdown(60)
 
   const handleSubmit = () => {
-    console.log('confirm otp', code.value);
-    navigate('/signup-success');
-  };
+    navigate('/signup-success')
+  }
 
   return (
     <Layout>
@@ -27,5 +26,5 @@ export default function Otp() {
         countdown={countdown.formatted}
       />
     </Layout>
-  );
+  )
 }

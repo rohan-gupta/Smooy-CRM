@@ -13,24 +13,24 @@ export default function SignUpSuccessCard({ onContinue }) {
     >
       <Stack gap={4} align="center">
         <Box
-          w="88px"
-          h="88px"
+          w="clamp(68px, 22vw, 92px)"
+          h="clamp(68px, 22vw, 92px)"
           borderRadius="999px"
           background="linear-gradient(180deg, #a9eb55 0%, #5dc839 100%)"
           display="grid"
           placeItems="center"
           boxShadow="0 12px 24px rgba(121, 197, 68, 0.28)"
         >
-          <Text fontSize="44px" lineHeight="1" fontWeight="900" color="white">
+          <Text fontSize="clamp(34px, 11vw, 48px)" lineHeight="1" fontWeight="900" color="white">
             ✓
           </Text>
         </Box>
 
-        <Text fontSize="28px" fontWeight="800" color="#ca2b7d" textAlign="center">
+        <Text fontSize="clamp(22px, 7vw, 30px)" fontWeight="800" color="#ca2b7d" textAlign="center">
           You're all set!
         </Text>
 
-        <Text fontSize="18px" color="#4d3f4e" textAlign="center" lineHeight="1.45">
+        <Text fontSize="clamp(14px, 4.5vw, 19px)" color="#4d3f4e" textAlign="center" lineHeight="1.45">
           Your Smooy Pasir Ris Mall membership is ready to use.
         </Text>
 
@@ -39,4 +39,3 @@ export default function SignUpSuccessCard({ onContinue }) {
     </Box>
   )
 }
-

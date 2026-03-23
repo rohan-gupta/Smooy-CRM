@@ -10,6 +10,7 @@ const InputBox = forwardRef(function InputBox(
     withPrefix = true,
     prefixEmoji = '🇸🇬',
     prefixText = '+65',
+    leftIcon = null,
     rightIcon = null,
     ...props
   },
@@ -22,17 +23,23 @@ const InputBox = forwardRef(function InputBox(
       borderColor="rgba(240,138,197,0.55)"
       borderRadius="18px"
       bg="rgba(255,255,255,0.55)"
-      h="62px"
+      h="clamp(50px, 15vw, 64px)"
       px={4}
     >
       <HStack spacing={4} align="center" h="full">
+        {leftIcon ? (
+          <Box display="grid" placeItems="center" flexShrink={0} color="#ef69b0">
+            {leftIcon}
+          </Box>
+        ) : null}
+
         {withPrefix && (
           <>
-            <Text fontWeight="400" fontSize="xl" lineHeight="1">
+            <Text fontWeight="400" fontSize="clamp(16px, 5vw, 22px)" lineHeight="1">
               {prefixEmoji}
             </Text>
 
-            <Text fontWeight="700" fontSize="md" color="gray.700">
+            <Text fontWeight="700" fontSize="clamp(14px, 4vw, 18px)" color="gray.700">
               {prefixText}
             </Text>
 
@@ -48,7 +55,7 @@ const InputBox = forwardRef(function InputBox(
           value={value}
           onChange={onChange}
           fontWeight="400"
-          fontSize="md"
+          fontSize="clamp(14px, 4vw, 18px)"
           h="full"
           py={0}
           px={0}
@@ -60,9 +67,7 @@ const InputBox = forwardRef(function InputBox(
 
         {rightIcon ? (
           <Box display="grid" placeItems="center" w="26px" color="pink.500">
-            <Text fontSize="xl" lineHeight="1">
-              {rightIcon}
-            </Text>
+            {rightIcon}
           </Box>
         ) : null}
       </HStack>

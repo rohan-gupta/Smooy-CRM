@@ -1,5 +1,5 @@
 import FormCard from './FormCard';
-import { InputBox, SubmitButton } from '../basic';
+import { InputBox, SubmitButton, DatePickerBox } from '../basic';
 
 export default function SignUpForm({ name, onNameChange, email, onEmailChange, dob, onDobChange, onSubmit }) {
   return (
@@ -22,12 +22,9 @@ export default function SignUpForm({ name, onNameChange, email, onEmailChange, d
         inputMode="email"
         withPrefix={false}
       />
-      <InputBox
+      <DatePickerBox
         value={dob}
         onChange={onDobChange}
-        placeholder="Date of Birth"
-        type="date"
-        withPrefix={false}
       />
       <SubmitButton onClick={onSubmit}>Enroll</SubmitButton>
     </FormCard>
