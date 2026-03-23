@@ -1,10 +1,11 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { OtpForm } from '../components/form';
 import { useInputValue } from '../hooks/useInputValue';
 import { useCountdown } from '../hooks/useCountdown';
 
 export default function Otp() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const phone = searchParams.get('phone') || '+65 XXXX XXXX';
   const code = useInputValue('');
@@ -12,6 +13,7 @@ export default function Otp() {
 
   const handleSubmit = () => {
     console.log('confirm otp', code.value);
+    navigate('/signup-success');
   };
 
   return (
