@@ -1,14 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { SignUpForm } from '../components/form';
 import { useInputValue } from '../hooks/useInputValue';
 
 export default function Signup() {
+  const navigate = useNavigate();
   const name = useInputValue('');
   const email = useInputValue('');
   const dob = useInputValue('');
 
   const handleSubmit = () => {
     console.log('enroll', { name: name.value, email: email.value, dob: dob.value });
+    const customerName = (name.value || 'Sarah').trim();
+    navigate(`/signup-success?name=${encodeURIComponent(customerName)}`);
   };
 
   return (

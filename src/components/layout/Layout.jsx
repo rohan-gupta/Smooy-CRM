@@ -1,6 +1,12 @@
 import { Box, Stack } from '@chakra-ui/react';
 
-export default function Layout({ children }) {
+export default function Layout({
+  children,
+  topPadding = 'clamp(110px, 17vh, 185px)',
+  stackGap = 6,
+  stackPB = 10,
+  stackPX = 5,
+}) {
   return (
     <Box
       as="main"
@@ -17,10 +23,10 @@ export default function Layout({ children }) {
       pb="env(safe-area-inset-bottom)"
     >
       <Stack
-        gap={6}
-        px={5}
-        pt="clamp(110px, 17vh, 185px)"
-        pb={10}
+        gap={stackGap}
+        px={stackPX}
+        pt={topPadding}
+        pb={stackPB}
         w="full"
         maxW="420px"
         mx="auto"
