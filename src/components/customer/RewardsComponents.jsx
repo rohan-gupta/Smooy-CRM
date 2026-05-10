@@ -1,4 +1,4 @@
-import { Box, HStack, Image, Stack, Text } from '@chakra-ui/react'
+import { Box, HStack, Stack, Text } from '@chakra-ui/react'
 
 export function GlassCard({ children, ...props }) {
   return (
@@ -64,33 +64,30 @@ export function StampCard({ active = 5, total = 10, message }) {
   )
 }
 
-export function QrButton({ customerName }) {
-  const qrData = `Smooy-${customerName.replace(/\s+/g, '-').trim()}-QR`
-  const src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`
-
+export function QrButton() {
   return (
     <Stack
-      as="button"
-      type="button"
-      border="none"
+      as="div"
       background="rgba(255,255,255,0.72)"
       borderRadius="14px"
       p="6px"
-      cursor="pointer"
       flexShrink={0}
-      onClick={() => {}}
       align="center"
       gap="2px"
     >
-      <Image
-        src={src}
-        alt="QR"
+      <Box
         width="clamp(60px, 20vw, 86px)"
         height="clamp(60px, 20vw, 86px)"
         borderRadius="8px"
-        background="white"
-        loading="lazy"
-      />
+        bg="white"
+        border="2px solid rgba(119,95,116,0.15)"
+        display="grid"
+        placeItems="center"
+      >
+        <Text fontSize="clamp(10px, 3vw, 13px)" color="#775f74" fontWeight="700" textAlign="center">
+          QR
+        </Text>
+      </Box>
       <Text fontSize="clamp(8px, 2.6vw, 11px)" color="#775f74" fontWeight="700">
         Scan to Earn Points
       </Text>

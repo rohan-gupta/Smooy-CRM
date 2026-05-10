@@ -12,7 +12,13 @@ export default function Otp() {
   const countdown = useCountdown(60)
 
   const handleSubmit = () => {
-    navigate('/signup-success')
+    // TODO: verify OTP with API, then check if customer exists
+    const isNewCustomer = true
+    if (isNewCustomer) {
+      navigate(`/signup?phone=${encodeURIComponent(phone)}`)
+    } else {
+      navigate('/customer-rewards')
+    }
   }
 
   return (

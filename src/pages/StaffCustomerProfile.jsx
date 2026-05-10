@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Box, HStack, Stack, Text } from '@chakra-ui/react'
 import { Layout } from '../components/layout'
@@ -88,6 +88,10 @@ export default function StaffCustomerProfile() {
   const [stampLocked, setStampLocked] = useState(false)
   const lockTimer = useRef(null)
 
+  useEffect(() => {
+    return () => { if (lockTimer.current) clearTimeout(lockTimer.current) }
+  }, [])
+
   const handleAddStamp = useCallback(() => {
     if (stampLocked) return
     addStamp()
@@ -119,7 +123,7 @@ export default function StaffCustomerProfile() {
             <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
               {name}
             </Text>
-            <QrButton customerName={name} />
+            <QrButton />
           </HStack>
         </GlassCard>
 
@@ -130,8 +134,8 @@ export default function StaffCustomerProfile() {
           {rewards.map((reward) => (
             <StaffRewardRow
               key={reward.id}
-              label={reward.label}
-              desc={reward.desc}
+              label={reward.title}
+              desc={reward.description}
               status={reward.status}
               onStatusChange={(val) => updateRewardStatus(reward.id, val)}
             />

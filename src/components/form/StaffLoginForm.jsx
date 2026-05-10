@@ -20,7 +20,7 @@ export default function StaffLoginForm({
           <InputBox
             value={staffIdOrEmail}
             onChange={onStaffIdOrEmailChange}
-            placeholder=""
+            placeholder="staff@smooy.com"
             withPrefix={false}
           />
         </Stack>
@@ -32,7 +32,7 @@ export default function StaffLoginForm({
           <InputBox
             value={password}
             onChange={onPasswordChange}
-            placeholder=""
+            placeholder="Enter password"
             type="password"
             withPrefix={false}
           />

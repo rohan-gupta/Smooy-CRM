@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 
 const INITIAL_REWARDS = [
-  { id: 1, label: '20% OFF', desc: 'The Next Froyo', status: 'redeemable' },
-  { id: 2, label: 'Upsize', desc: 'At 5 Stamps', status: 'redeemed' },
+  { id: 1, title: '20% OFF', description: 'The Next Froyo', status: 'redeemable' },
+  { id: 2, title: 'Upsize', description: 'At 5 Stamps', status: 'redeemed' },
 ]
 
 const RewardsContext = createContext(null)

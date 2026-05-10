@@ -42,7 +42,7 @@ export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
           <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
             Welcome, {customerName}!
           </Text>
-          <QrButton customerName={customerName} />
+          <QrButton />
         </HStack>
       </GlassCard>
 
@@ -56,8 +56,8 @@ export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
             <RewardRow
               key={reward.id}
               icon={display.icon}
-              label={reward.label}
-              desc={reward.desc}
+              label={reward.title}
+              desc={reward.description}
               statusLabel={display.label}
               statusColor={display.color}
             />
