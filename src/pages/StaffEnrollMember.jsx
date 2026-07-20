@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout'
 import { InputBox, SubmitButton, DatePickerBox } from '../components/basic'
 import { useInputValue } from '../hooks/useInputValue'
+import { useRewards } from '../context/RewardsContext'
 import { PersonIcon, SearchIcon, MailIcon } from '../components/icons/StaffIcons'
 
 export default function StaffEnrollMember() {
   const navigate = useNavigate()
+  const { enrollCustomer } = useRewards()
   const fullName = useInputValue('')
   const phone = useInputValue('')
   const email = useInputValue('')
@@ -14,7 +16,10 @@ export default function StaffEnrollMember() {
 
   const handleEnroll = () => {
     const name = (fullName.value || 'New Member').trim()
-    navigate(`/staff-customer-profile?name=${encodeURIComponent(name)}`)
+    const rawPhone = phone.value.trim()
+    const fullPhone = rawPhone.startsWith('+') ? rawPhone : `+65 ${rawPhone}`
+    enrollCustomer(fullPhone, name)
+    navigate(`/staff-customer-profile?phone=${encodeURIComponent(fullPhone)}`)
   }
 
   return (

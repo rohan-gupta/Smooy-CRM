@@ -64,9 +64,8 @@ export function StampCard({ active = 5, total = 10, message }) {
   )
 }
 
-export function QrButton({ customerName }) {
-  const qrData = `Smooy-${customerName.replace(/\s+/g, '-').trim()}-QR`
-  const src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`
+export function QrButton({ phone }) {
+  const src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(phone)}`
 
   return (
     <Stack
