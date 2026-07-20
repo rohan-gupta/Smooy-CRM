@@ -3,6 +3,7 @@ import { Layout } from '../components/layout'
 import { OtpForm } from '../components/form'
 import { useInputValue } from '../hooks/useInputValue'
 import { useCountdown } from '../hooks/useCountdown'
+import { CUSTOMER_SESSION_KEY } from '../components/auth/RequireAuth'
 
 export default function Otp() {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ export default function Otp() {
 
   const handleSubmit = () => {
     // TODO: verify OTP with API, then check if customer exists
+    sessionStorage.setItem(CUSTOMER_SESSION_KEY, phone)
     const isNewCustomer = true
     if (isNewCustomer) {
       navigate(`/signup?phone=${encodeURIComponent(phone)}`)

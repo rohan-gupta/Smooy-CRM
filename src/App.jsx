@@ -10,21 +10,22 @@ import StaffQrScanner from './pages/StaffQrScanner'
 import StaffPhoneSearch from './pages/StaffPhoneSearch'
 import StaffEnrollMember from './pages/StaffEnrollMember'
 import StaffCustomerProfile from './pages/StaffCustomerProfile'
+import { RequireStaffAuth, RequireCustomerAuth } from './components/auth/RequireAuth'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/otp" element={<Otp />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/signup-success" element={<SignUpSuccess />} />
-      <Route path="/customer-rewards" element={<CustomerRewards />} />
+      <Route path="/signup" element={<RequireCustomerAuth><Signup /></RequireCustomerAuth>} />
+      <Route path="/signup-success" element={<RequireCustomerAuth><SignUpSuccess /></RequireCustomerAuth>} />
+      <Route path="/customer-rewards" element={<RequireCustomerAuth><CustomerRewards /></RequireCustomerAuth>} />
       <Route path="/staff-login" element={<StaffLogin />} />
-      <Route path="/staff-home" element={<StaffHome />} />
-      <Route path="/staff-qr-scanner" element={<StaffQrScanner />} />
-      <Route path="/staff-phone-search" element={<StaffPhoneSearch />} />
-      <Route path="/staff-enroll-member" element={<StaffEnrollMember />} />
-      <Route path="/staff-customer-profile" element={<StaffCustomerProfile />} />
+      <Route path="/staff-home" element={<RequireStaffAuth><StaffHome /></RequireStaffAuth>} />
+      <Route path="/staff-qr-scanner" element={<RequireStaffAuth><StaffQrScanner /></RequireStaffAuth>} />
+      <Route path="/staff-phone-search" element={<RequireStaffAuth><StaffPhoneSearch /></RequireStaffAuth>} />
+      <Route path="/staff-enroll-member" element={<RequireStaffAuth><StaffEnrollMember /></RequireStaffAuth>} />
+      <Route path="/staff-customer-profile" element={<RequireStaffAuth><StaffCustomerProfile /></RequireStaffAuth>} />
     </Routes>
   )
 }
