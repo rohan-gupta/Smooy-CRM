@@ -4,11 +4,11 @@ import CustomerRewardsCard from '../components/customer/CustomerRewardsCard'
 
 export default function CustomerRewards() {
   const [searchParams] = useSearchParams()
-  const name = searchParams.get('name') || 'Sarah'
+  const phone = searchParams.get('phone') || '+65 8123 4567'
 
   return (
     <Layout topPadding="16vh" stackGap="1.2vh" stackPB="1vh" stackPX="6%">
-      <CustomerRewardsCard customerName={name} />
+      <CustomerRewardsCard phone={phone} />
     </Layout>
   )
 }

@@ -1,30 +1,91 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 
-const INITIAL_REWARDS = [
-  { id: 1, title: '20% OFF', description: 'The Next Froyo', status: 'redeemable' },
-  { id: 2, title: 'Upsize', description: 'At 5 Stamps', status: 'redeemed' },
-]
+const TOTAL_STAMPS = 10
+
+function normalizePhone(phone) {
+  return (phone || '').replace(/\s+/g, '')
+}
+
+const SEED_CUSTOMERS = {
+  '+65 8123 4567': {
+    name: 'Sarah Miller',
+    stamps: 5,
+    rewards: [
+      { id: 1, title: '20% OFF', description: 'The Next Froyo', status: 'redeemable' },
+      { id: 2, title: 'Upsize', description: 'At 5 Stamps', status: 'redeemed' },
+    ],
+  },
+  '+65 9234 5678': {
+    name: 'John Tan',
+    stamps: 2,
+    rewards: [
+      { id: 1, title: '20% OFF', description: 'The Next Froyo', status: 'redeemable' },
+    ],
+  },
+}
 
 const RewardsContext = createContext(null)
 
 export function RewardsProvider({ children }) {
-  const [rewards, setRewards] = useState(INITIAL_REWARDS)
-  const [stamps, setStamps] = useState(5)
-  const totalStamps = 10
+  const [customers, setCustomers] = useState(() => {
+    const normalized = {}
+    for (const [phone, data] of Object.entries(SEED_CUSTOMERS)) {
+      normalized[normalizePhone(phone)] = data
+    }
+    return normalized
+  })
 
-  const updateRewardStatus = useCallback((id, newStatus) => {
-    setRewards((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    )
+  const getCustomer = useCallback(
+    (phone) => customers[normalizePhone(phone)] || null,
+    [customers]
+  )
+
+  const enrollCustomer = useCallback((phone, name) => {
+    const key = normalizePhone(phone)
+    setCustomers((prev) => ({
+      ...prev,
+      [key]: prev[key] || { name, stamps: 0, rewards: [] },
+    }))
   }, [])
 
-  const addStamp = useCallback(() => {
-    setStamps((prev) => Math.min(prev + 1, totalStamps))
-  }, [totalStamps])
+  const updateRewardStatus = useCallback((phone, rewardId, newStatus) => {
+    const key = normalizePhone(phone)
+    setCustomers((prev) => {
+      const customer = prev[key]
+      if (!customer) return prev
+      return {
+        ...prev,
+        [key]: {
+          ...customer,
+          rewards: customer.rewards.map((r) =>
+            r.id === rewardId ? { ...r, status: newStatus } : r
+          ),
+        },
+      }
+    })
+  }, [])
+
+  const addStamp = useCallback((phone) => {
+    const key = normalizePhone(phone)
+    setCustomers((prev) => {
+      const customer = prev[key]
+      if (!customer) return prev
+      return {
+        ...prev,
+        [key]: { ...customer, stamps: Math.min(customer.stamps + 1, TOTAL_STAMPS) },
+      }
+    })
+  }, [])
 
   return (
     <RewardsContext.Provider
-      value={{ rewards, stamps, totalStamps, updateRewardStatus, addStamp }}
+      value={{
+        totalStamps: TOTAL_STAMPS,
+        getCustomer,
+        enrollCustomer,
+        updateRewardStatus,
+        addStamp,
+      }}
     >
       {children}
     </RewardsContext.Provider>

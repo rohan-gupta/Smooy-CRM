@@ -5,11 +5,11 @@ import SignUpSuccessCard from '../components/success/SignUpSuccessCard'
 export default function SignUpSuccess() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const name = searchParams.get('name') || 'Sarah'
+  const phone = searchParams.get('phone') || ''
 
   return (
     <Layout>
-      <SignUpSuccessCard onContinue={() => navigate(`/customer-rewards?name=${encodeURIComponent(name)}`)} />
+      <SignUpSuccessCard onContinue={() => navigate(`/customer-rewards?phone=${encodeURIComponent(phone)}`)} />
     </Layout>
   )
 }

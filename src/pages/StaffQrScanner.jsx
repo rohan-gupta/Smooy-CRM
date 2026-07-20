@@ -8,7 +8,7 @@ export default function StaffQrScanner() {
   const navigate = useNavigate()
 
   const handleScanSuccess = (decodedText) => {
-    navigate(`/staff-customer-profile?name=${encodeURIComponent(decodedText)}`)
+    navigate(`/staff-customer-profile?phone=${encodeURIComponent(decodedText)}`)
   }
 
   return (

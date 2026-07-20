@@ -83,8 +83,12 @@ function StaffRewardRow({ label, desc, status, onStatusChange }) {
 export default function StaffCustomerProfile() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const name = searchParams.get('name') || 'Sarah Miller'
-  const { rewards, stamps, totalStamps, updateRewardStatus, addStamp } = useRewards()
+  const phone = searchParams.get('phone') || ''
+  const { getCustomer, totalStamps, updateRewardStatus, addStamp } = useRewards()
+  const customer = getCustomer(phone)
+  const name = customer?.name || 'Unknown Customer'
+  const rewards = customer?.rewards || []
+  const stamps = customer?.stamps || 0
   const [stampLocked, setStampLocked] = useState(false)
   const lockTimer = useRef(null)
 
@@ -94,10 +98,10 @@ export default function StaffCustomerProfile() {
 
   const handleAddStamp = useCallback(() => {
     if (stampLocked) return
-    addStamp()
+    addStamp(phone)
     setStampLocked(true)
     lockTimer.current = setTimeout(() => setStampLocked(false), 3000)
-  }, [stampLocked, addStamp])
+  }, [stampLocked, addStamp, phone])
 
   return (
     <Layout topPadding="16vh" stackGap="1.2vh" stackPB="1vh" stackPX="6%">
@@ -123,7 +127,7 @@ export default function StaffCustomerProfile() {
             <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
               {name}
             </Text>
-            <QrButton customerName={name} />
+            <QrButton phone={phone} />
           </HStack>
         </GlassCard>
 
@@ -137,7 +141,7 @@ export default function StaffCustomerProfile() {
               label={reward.title}
               desc={reward.description}
               status={reward.status}
-              onStatusChange={(val) => updateRewardStatus(reward.id, val)}
+              onStatusChange={(val) => updateRewardStatus(phone, reward.id, val)}
             />
           ))}
         </GlassCard>

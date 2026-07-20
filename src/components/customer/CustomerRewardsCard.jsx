@@ -32,8 +32,12 @@ function RewardRow({ icon, label, desc, statusLabel, statusColor }) {
   )
 }
 
-export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
-  const { rewards, stamps, totalStamps } = useRewards()
+export default function CustomerRewardsCard({ phone }) {
+  const { getCustomer, totalStamps } = useRewards()
+  const customer = getCustomer(phone)
+  const customerName = customer?.name || 'Guest'
+  const stamps = customer?.stamps || 0
+  const rewards = customer?.rewards || []
 
   return (
     <Stack gap="1.5vh">
@@ -42,7 +46,7 @@ export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
           <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
             Welcome, {customerName}!
           </Text>
-          <QrButton customerName={customerName} />
+          <QrButton phone={phone} />
         </HStack>
       </GlassCard>
 

@@ -17,7 +17,7 @@ export default function Otp() {
     if (isNewCustomer) {
       navigate(`/signup?phone=${encodeURIComponent(phone)}`)
     } else {
-      navigate('/customer-rewards')
+      navigate(`/customer-rewards?phone=${encodeURIComponent(phone)}`)
     }
   }
 
