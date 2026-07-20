@@ -42,7 +42,7 @@ export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
           <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
             Welcome, {customerName}!
           </Text>
-          <QrButton />
+          <QrButton customerName={customerName} />
         </HStack>
       </GlassCard>
 

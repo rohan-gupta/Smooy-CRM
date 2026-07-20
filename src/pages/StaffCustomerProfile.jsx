@@ -123,7 +123,7 @@ export default function StaffCustomerProfile() {
             <Text fontSize="clamp(18px, 5.6vw, 24px)" fontWeight="800">
               {name}
             </Text>
-            <QrButton />
+            <QrButton customerName={name} />
           </HStack>
         </GlassCard>
 
