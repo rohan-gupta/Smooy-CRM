@@ -56,8 +56,8 @@ export default function CustomerRewardsCard({ customerName = 'Sarah' }) {
             <RewardRow
               key={reward.id}
               icon={display.icon}
-              label={reward.label}
-              desc={reward.desc}
+              label={reward.title}
+              desc={reward.description}
               statusLabel={display.label}
               statusColor={display.color}
             />

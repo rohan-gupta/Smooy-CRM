@@ -1,17 +1,19 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Layout } from '../components/layout'
 import { SignUpForm } from '../components/form'
 import { useInputValue } from '../hooks/useInputValue'
 
 export default function Signup() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const phone = searchParams.get('phone') || ''
   const name = useInputValue('')
   const email = useInputValue('')
   const dob = useInputValue('')
 
   const handleSubmit = () => {
-    const customerName = (name.value || 'Sarah').trim()
-    navigate(`/signup-success?name=${encodeURIComponent(customerName)}`)
+    // TODO: POST /customers with { phone, name, email, dob }
+    navigate(`/signup-success?name=${encodeURIComponent(name.value.trim())}`)
   }
 
   return (

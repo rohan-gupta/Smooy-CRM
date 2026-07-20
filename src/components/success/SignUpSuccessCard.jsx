@@ -1,17 +1,15 @@
 import { Box, Stack, Text } from '@chakra-ui/react'
+import FormCard from '../form/FormCard'
 import { SubmitButton } from '../basic'
 
 export default function SignUpSuccessCard({ onContinue }) {
   return (
-    <Box
-      w="full"
-      bg="rgba(255,245,252,0.82)"
-      borderRadius="28px"
-      p={6}
-      boxShadow="0 10px 35px rgba(178, 70, 132, 0.14)"
-      border="1px solid rgba(255,255,255,0.50)"
+    <FormCard
+      title="You're all set!"
+      subtitle="Your Smooy Pasir Ris Mall membership is ready to use."
+      gap={4}
     >
-      <Stack gap={4} align="center">
+      <Stack align="center" gap={4}>
         <Box
           w="clamp(68px, 22vw, 92px)"
           h="clamp(68px, 22vw, 92px)"
@@ -25,17 +23,8 @@ export default function SignUpSuccessCard({ onContinue }) {
             ✓
           </Text>
         </Box>
-
-        <Text fontSize="clamp(22px, 7vw, 30px)" fontWeight="800" color="#ca2b7d" textAlign="center">
-          You're all set!
-        </Text>
-
-        <Text fontSize="clamp(14px, 4.5vw, 19px)" color="#4d3f4e" textAlign="center" lineHeight="1.45">
-          Your Smooy Pasir Ris Mall membership is ready to use.
-        </Text>
-
         <SubmitButton onClick={onContinue}>Continue</SubmitButton>
       </Stack>
-    </Box>
+    </FormCard>
   )
 }
