@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Box, HStack, Stack, Text } from '@chakra-ui/react'
 import { Layout } from '../components/layout'
 import { GlassCard, QrButton, StampCard } from '../components/customer/RewardsComponents'
-import { useRewards } from '../context/RewardsContext'
+import { getCustomer, addStamp, updateRewardStatus } from '../api/client'
 import { REWARD_STATUSES, REWARD_STATUS_MAP } from '../constants/rewardStatus'
+
+const TOTAL_STAMPS = 10
 
 function StatusDropdown({ value, onChange }) {
   const current = REWARD_STATUS_MAP[value] || REWARD_STATUSES[0]
@@ -84,24 +86,57 @@ export default function StaffCustomerProfile() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const phone = searchParams.get('phone') || ''
-  const { getCustomer, totalStamps, updateRewardStatus, addStamp } = useRewards()
-  const customer = getCustomer(phone)
-  const name = customer?.name || 'Unknown Customer'
-  const rewards = customer?.rewards || []
-  const stamps = customer?.stamps || 0
+  const [customer, setCustomer] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [stampLocked, setStampLocked] = useState(false)
   const lockTimer = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getCustomer(phone)
+      .then((data) => { if (!cancelled) setCustomer(data) })
+      .catch(() => { if (!cancelled) setCustomer(null) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [phone])
 
   useEffect(() => {
     return () => { if (lockTimer.current) clearTimeout(lockTimer.current) }
   }, [])
 
-  const handleAddStamp = useCallback(() => {
+  const name = customer?.name || 'Unknown Customer'
+  const rewards = customer?.rewards || []
+  const stamps = customer?.stamps || 0
+  const totalStamps = TOTAL_STAMPS
+
+  const handleAddStamp = useCallback(async () => {
     if (stampLocked) return
-    addStamp(phone)
     setStampLocked(true)
+    try {
+      const updated = await addStamp(phone)
+      setCustomer(updated)
+    } catch (err) {
+      console.error(err)
+    }
     lockTimer.current = setTimeout(() => setStampLocked(false), 3000)
-  }, [stampLocked, addStamp, phone])
+  }, [stampLocked, phone])
+
+  const handleRewardStatusChange = useCallback(async (rewardId, status) => {
+    try {
+      const updated = await updateRewardStatus(phone, rewardId, status)
+      setCustomer(updated)
+    } catch (err) {
+      console.error(err)
+    }
+  }, [phone])
+
+  if (loading) {
+    return (
+      <Layout topPadding="16vh" stackGap="1.2vh" stackPB="1vh" stackPX="6%">
+        <Text textAlign="center" color="white">Loading...</Text>
+      </Layout>
+    )
+  }
 
   return (
     <Layout topPadding="16vh" stackGap="1.2vh" stackPB="1vh" stackPX="6%">
@@ -141,7 +176,7 @@ export default function StaffCustomerProfile() {
               label={reward.title}
               desc={reward.description}
               status={reward.status}
-              onStatusChange={(val) => updateRewardStatus(phone, reward.id, val)}
+              onStatusChange={(val) => handleRewardStatusChange(reward.id, val)}
             />
           ))}
         </GlassCard>
