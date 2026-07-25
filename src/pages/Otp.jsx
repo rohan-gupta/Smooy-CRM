@@ -6,7 +6,7 @@ import { OtpForm } from '../components/form'
 import { useInputValue } from '../hooks/useInputValue'
 import { useCountdown } from '../hooks/useCountdown'
 import { CUSTOMER_SESSION_KEY } from '../components/auth/RequireAuth'
-import { getCustomer } from '../api/client'
+import { getCustomer, verifyOtp, sendOtp } from '../api/client'
 
 export default function Otp() {
   const navigate = useNavigate()
@@ -17,7 +17,13 @@ export default function Otp() {
   const [error, setError] = useState(null)
 
   const handleSubmit = async () => {
-    // TODO: verify OTP code with API - currently any code is accepted
+    try {
+      await verifyOtp(phone, code.value)
+    } catch (err) {
+      setError(err.message)
+      return
+    }
+
     sessionStorage.setItem(CUSTOMER_SESSION_KEY, phone)
     try {
       await getCustomer(phone)
@@ -31,6 +37,15 @@ export default function Otp() {
     }
   }
 
+  const handleResend = async () => {
+    try {
+      await sendOtp(phone)
+      countdown.reset()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <Layout>
       <OtpForm
@@ -38,7 +53,7 @@ export default function Otp() {
         code={code.value}
         onCodeChange={code.onChange}
         onSubmit={handleSubmit}
-        onResend={countdown.reset}
+        onResend={handleResend}
         countdown={countdown.formatted}
       />
       {error && (

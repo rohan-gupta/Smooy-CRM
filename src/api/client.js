@@ -41,3 +41,17 @@ export function updateRewardStatus(phone, rewardId, status) {
     { method: 'PATCH', body: JSON.stringify({ status }) }
   )
 }
+
+export function sendOtp(phone) {
+  return request('/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone: normalizePhone(phone) }),
+  })
+}
+
+export function verifyOtp(phone, code) {
+  return request('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone: normalizePhone(phone), code }),
+  })
+}
