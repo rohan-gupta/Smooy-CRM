@@ -11,6 +11,7 @@ Globals:
       Variables:
         CUSTOMERS_TABLE: !Ref CustomersTable
         STAFF_TABLE: !Ref StaffTable
+        OTP_TABLE: !Ref OtpCodesTable
 
 Resources:
   CustomersTable:
@@ -36,6 +37,21 @@ Resources:
       KeySchema:
         - AttributeName: email
           KeyType: HASH
+
+  OtpCodesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: smooy-otp-codes
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: phone
+          AttributeType: S
+      KeySchema:
+        - AttributeName: phone
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
 
   SmooyApi:
     Type: AWS::Serverless::Api
@@ -109,6 +125,42 @@ Resources:
             RestApiId: !Ref SmooyApi
             Path: /customers/{phone}/rewards/{rewardId}
             Method: PATCH
+
+  SendOtpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sendOtp.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OtpCodesTable
+        - Statement:
+            - Effect: Allow
+              Action: sns:Publish
+              Resource: '*'
+      Events:
+        SendOtp:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmooyApi
+            Path: /auth/send-otp
+            Method: POST
+
+  VerifyOtpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: verifyOtp.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OtpCodesTable
+      Events:
+        VerifyOtp:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmooyApi
+            Path: /auth/verify-otp
+            Method: POST
 
 Outputs:
   ApiUrl:
