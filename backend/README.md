@@ -41,6 +41,20 @@ New customers are seeded with two rewards: `20% OFF` (redeemable immediately) an
 | `code` | String (6 digits) |
 | `expiresAt` | Number (epoch seconds) — also the DynamoDB TTL attribute, auto-deletes after expiry |
 
+### `smooy-history` table (audit log)
+| field | type |
+|---|---|
+| `phone` (partition key) | String, normalized |
+| `eventId` (sort key) | String — `<ISO timestamp>#<random>`, so items sort chronologically |
+| `type` | String — `customer_enrolled`, `stamp_added`, `reward_unlocked`, `reward_status_changed` |
+| `details` | Map — event-specific (e.g. `{ from, to }` for stamps, `{ rewardId, from, to }` for status changes) |
+| `createdAt` | String (ISO) |
+
+Written to (best-effort) by `enrollCustomer`, `addStamp`, and `updateReward`. Query by `phone` (newest-first) to build a per-customer history view. A history-write failure never blocks the primary operation.
+
+## Reward lock rule
+The `Upsize` reward starts `locked` and unlocks **only** automatically when the customer reaches 5 stamps (in `addStamp`). Staff cannot manually unlock it — `updateReward` returns **403** if the target status is `locked`, or if the reward's current status is `locked`.
+
 ## Endpoints
 
 | Method | Path | Lambda | Purpose |
@@ -48,7 +62,7 @@ New customers are seeded with two rewards: `20% OFF` (redeemable immediately) an
 | POST | `/customers` | `enrollCustomer` | Create a customer (idempotent — returns existing record if phone already enrolled) |
 | GET | `/customers/{phone}` | `getCustomer` | Look up a customer; 404 if not found |
 | POST | `/customers/{phone}/stamps` | `addStamp` | Increment stamps (capped at 10), auto-unlocks Upsize reward at 5 |
-| PATCH | `/customers/{phone}/rewards/{rewardId}` | `updateReward` | Change a reward's status |
+| PATCH | `/customers/{phone}/rewards/{rewardId}` | `updateReward` | Change a reward's status (rejects manual lock/unlock with 403) |
 | POST | `/auth/send-otp` | `sendOtp` | Generate a 6-digit code, store it (5 min TTL), send via SNS SMS |
 | POST | `/auth/verify-otp` | `verifyOtp` | Check code + expiry, delete on success (single-use) |
 

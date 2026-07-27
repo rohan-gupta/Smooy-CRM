@@ -12,6 +12,7 @@ Globals:
         CUSTOMERS_TABLE: !Ref CustomersTable
         STAFF_TABLE: !Ref StaffTable
         OTP_TABLE: !Ref OtpCodesTable
+        HISTORY_TABLE: !Ref HistoryTable
 
 Resources:
   CustomersTable:
@@ -53,6 +54,22 @@ Resources:
         AttributeName: expiresAt
         Enabled: true
 
+  HistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: smooy-history
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: phone
+          AttributeType: S
+        - AttributeName: eventId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: phone
+          KeyType: HASH
+        - AttributeName: eventId
+          KeyType: RANGE
+
   SmooyApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -70,6 +87,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CustomersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HistoryTable
       Events:
         Enroll:
           Type: Api
@@ -102,6 +121,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CustomersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HistoryTable
       Events:
         AddStamp:
           Type: Api
@@ -118,6 +139,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CustomersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HistoryTable
       Events:
         UpdateReward:
           Type: Api

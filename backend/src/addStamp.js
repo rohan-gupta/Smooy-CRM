@@ -1,6 +1,7 @@
 const { GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb')
 const { docClient, normalizePhone } = require('./dynamoClient')
 const { jsonResponse } = require('./response')
+const { recordHistory } = require('./history')
 
 const TABLE_NAME = process.env.CUSTOMERS_TABLE
 const TOTAL_STAMPS = 10
@@ -22,15 +23,19 @@ exports.handler = async (event) => {
     return jsonResponse(404, { message: 'Customer not found' })
   }
 
-  const newStamps = Math.min((existing.Item.stamps || 0) + 1, TOTAL_STAMPS)
+  const previousStamps = existing.Item.stamps || 0
+  const newStamps = Math.min(previousStamps + 1, TOTAL_STAMPS)
 
   let rewards = existing.Item.rewards || []
+  let didUnlock = false
   if (newStamps >= UPSIZE_UNLOCK_STAMPS) {
-    rewards = rewards.map((r) =>
-      r.id === UPSIZE_REWARD_ID && r.status === 'locked'
-        ? { ...r, status: 'redeemable' }
-        : r
-    )
+    rewards = rewards.map((r) => {
+      if (r.id === UPSIZE_REWARD_ID && r.status === 'locked') {
+        didUnlock = true
+        return { ...r, status: 'redeemable' }
+      }
+      return r
+    })
   }
 
   const result = await docClient.send(
@@ -42,6 +47,15 @@ exports.handler = async (event) => {
       ReturnValues: 'ALL_NEW',
     })
   )
+
+  await recordHistory(phone, 'stamp_added', { from: previousStamps, to: newStamps })
+  if (didUnlock) {
+    await recordHistory(phone, 'reward_unlocked', {
+      rewardId: UPSIZE_REWARD_ID,
+      rewardTitle: 'Upsize',
+      atStamps: newStamps,
+    })
+  }
 
   return jsonResponse(200, result.Attributes)
 }

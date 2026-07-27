@@ -1,6 +1,7 @@
 const { PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb')
 const { docClient, normalizePhone } = require('./dynamoClient')
 const { jsonResponse } = require('./response')
+const { recordHistory } = require('./history')
 
 const TABLE_NAME = process.env.CUSTOMERS_TABLE
 
@@ -33,6 +34,7 @@ exports.handler = async (event) => {
         ConditionExpression: 'attribute_not_exists(phone)',
       })
     )
+    await recordHistory(phone, 'customer_enrolled', { name: item.name })
     return jsonResponse(201, item)
   } catch (err) {
     if (err.name === 'ConditionalCheckFailedException') {
