@@ -1,15 +1,27 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Box, HStack, Stack, Text } from '@chakra-ui/react'
 import { Layout } from '../components/layout'
 import { GlassCard, QrButton, StampCard } from '../components/customer/RewardsComponents'
 import { getCustomer, addStamp, updateRewardStatus } from '../api/client'
+import { getCooldownRemaining, startCooldown } from '../utils/stampCooldown'
 import { REWARD_STATUSES, REWARD_STATUS_MAP } from '../constants/rewardStatus'
 
 const TOTAL_STAMPS = 10
 
+// Staff may only move a reward between these; 'locked' is not manually
+// selectable — a locked reward unlocks on its own at 5 stamps.
+const SELECTABLE_STATUSES = REWARD_STATUSES.filter((s) => s.value !== 'locked')
+
+function formatRemaining(ms) {
+  const totalSec = Math.ceil(ms / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 function StatusDropdown({ value, onChange }) {
-  const current = REWARD_STATUS_MAP[value] || REWARD_STATUSES[0]
+  const current = REWARD_STATUS_MAP[value] || SELECTABLE_STATUSES[0]
 
   return (
     <Box position="relative" flexShrink={0}>
@@ -36,7 +48,7 @@ function StatusDropdown({ value, onChange }) {
           '&:focus': { boxShadow: `0 0 0 2px ${current.color}33` },
         }}
       >
-        {REWARD_STATUSES.map((opt) => (
+        {SELECTABLE_STATUSES.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
@@ -59,6 +71,7 @@ function StatusDropdown({ value, onChange }) {
 
 function StaffRewardRow({ label, desc, status, onStatusChange }) {
   const iconInfo = REWARD_STATUS_MAP[status] || REWARD_STATUS_MAP.redeemable
+  const isLocked = status === 'locked'
 
   return (
     <HStack
@@ -77,7 +90,18 @@ function StaffRewardRow({ label, desc, status, onStatusChange }) {
           {desc ? ` ${desc}` : ''}
         </Text>
       </HStack>
-      <StatusDropdown value={status} onChange={onStatusChange} />
+      {isLocked ? (
+        <Text
+          flexShrink={0}
+          fontSize="clamp(11px, 3.3vw, 14px)"
+          fontWeight="700"
+          color={iconInfo.color}
+        >
+          {iconInfo.icon} Locked
+        </Text>
+      ) : (
+        <StatusDropdown value={status} onChange={onStatusChange} />
+      )}
     </HStack>
   )
 }
@@ -88,8 +112,7 @@ export default function StaffCustomerProfile() {
   const phone = searchParams.get('phone') || ''
   const [customer, setCustomer] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [stampLocked, setStampLocked] = useState(false)
-  const lockTimer = useRef(null)
+  const [cooldownRemaining, setCooldownRemaining] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -100,26 +123,32 @@ export default function StaffCustomerProfile() {
     return () => { cancelled = true }
   }, [phone])
 
+  // Keep the cooldown countdown in sync and ticking every second.
   useEffect(() => {
-    return () => { if (lockTimer.current) clearTimeout(lockTimer.current) }
-  }, [])
+    setCooldownRemaining(getCooldownRemaining(phone))
+    const id = setInterval(() => {
+      setCooldownRemaining(getCooldownRemaining(phone))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [phone])
 
   const name = customer?.name || 'Unknown Customer'
   const rewards = customer?.rewards || []
   const stamps = customer?.stamps || 0
   const totalStamps = TOTAL_STAMPS
+  const cooling = cooldownRemaining > 0
 
   const handleAddStamp = useCallback(async () => {
-    if (stampLocked) return
-    setStampLocked(true)
+    if (getCooldownRemaining(phone) > 0) return
     try {
       const updated = await addStamp(phone)
       setCustomer(updated)
+      startCooldown(phone)
+      setCooldownRemaining(getCooldownRemaining(phone))
     } catch (err) {
       console.error(err)
     }
-    lockTimer.current = setTimeout(() => setStampLocked(false), 3000)
-  }, [stampLocked, phone])
+  }, [phone])
 
   const handleRewardStatusChange = useCallback(async (rewardId, status) => {
     try {
@@ -198,21 +227,27 @@ export default function StaffCustomerProfile() {
           mx="auto"
           py="clamp(10px, 3vw, 14px)"
           borderRadius="16px"
-          bg={stampLocked
+          bg={cooling
             ? '#ccc'
             : 'linear-gradient(180deg, #ff58ae 0%, #f01b8d 100%)'}
           color="white"
           fontSize="clamp(15px, 4.5vw, 19px)"
           fontWeight="800"
           border="none"
-          cursor={stampLocked ? 'not-allowed' : 'pointer'}
-          opacity={stampLocked ? 0.6 : 1}
-          _hover={stampLocked ? {} : { opacity: 0.9 }}
-          _active={stampLocked ? {} : { transform: 'scale(0.97)' }}
+          cursor={cooling ? 'not-allowed' : 'pointer'}
+          opacity={cooling ? 0.6 : 1}
+          _hover={cooling ? {} : { opacity: 0.9 }}
+          _active={cooling ? {} : { transform: 'scale(0.97)' }}
           onClick={handleAddStamp}
+          disabled={cooling}
         >
-          {stampLocked ? 'Stamp Added ✓' : '+ Add Stamp'}
+          {cooling ? `Next stamp in ${formatRemaining(cooldownRemaining)}` : '+ Add Stamp'}
         </Box>
+        {cooling && (
+          <Text textAlign="center" fontSize="clamp(11px, 3.2vw, 13px)" color="rgba(255,255,255,0.85)">
+            One stamp per visit. Staff can log in again to reset.
+          </Text>
+        )}
       </Stack>
     </Layout>
   )
