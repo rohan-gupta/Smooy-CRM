@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Smooy CRM backend - Customers/Staff data and API
 
+Parameters:
+  SmsSenderId:
+    Type: String
+    Default: ''
+    Description: Registered Singapore SMS Sender ID (leave empty until registered with SSIR/SGNIC)
+
 Globals:
   Function:
     Runtime: nodejs24.x
@@ -74,6 +80,12 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: prod
+      # Global request throttle — a coarse backstop against abuse/spikes.
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingRateLimit: 25
+          ThrottlingBurstLimit: 50
       Cors:
         AllowMethods: "'GET,POST,PATCH,OPTIONS'"
         AllowHeaders: "'Content-Type'"
@@ -154,6 +166,9 @@ Resources:
     Properties:
       Handler: sendOtp.handler
       CodeUri: src/
+      Environment:
+        Variables:
+          SMS_SENDER_ID: !Ref SmsSenderId
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref OtpCodesTable

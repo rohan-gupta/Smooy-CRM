@@ -52,6 +52,15 @@ New customers are seeded with two rewards: `20% OFF` (redeemable immediately) an
 
 Written to (best-effort) by `enrollCustomer`, `addStamp`, and `updateReward`. Query by `phone` (newest-first) to build a per-customer history view. A history-write failure never blocks the primary operation.
 
+## OTP rate limiting
+Enforced in the OTP Lambdas + API Gateway:
+- **Resend cooldown:** max 1 code per number per **60s** (`sendOtp` → 429)
+- **Window cap:** max **5** codes per number per **rolling hour** (`sendOtp` → 429)
+- **Verify attempts:** max **5** wrong guesses, then the code is invalidated (`verifyOtp` → 429)
+- **API Gateway throttle:** stage-wide 25 req/s steady, 50 burst — a coarse global backstop
+
+Rate-limit state (`lastSentAt`, `sendCount`, `windowStart`, `attempts`) lives on the `smooy-otp-codes` record; its DynamoDB TTL (`expiresAt`) is set to the window end so the state persists for the full hour, while `codeExpiresAt` governs the 5-minute code validity.
+
 ## Reward lock rule
 The `Upsize` reward starts `locked` and unlocks **only** automatically when the customer reaches 5 stamps (in `addStamp`). Staff cannot manually unlock it — `updateReward` returns **403** if the target status is `locked`, or if the reward's current status is `locked`.
 
@@ -80,8 +89,12 @@ sam deploy --stack-name smooy-crm-dev --resolve-s3 --capabilities CAPABILITY_IAM
 
 Requires AWS CLI configured (`aws configure`) with an IAM user that has sufficient permissions (CloudFormation, Lambda, API Gateway, DynamoDB, IAM role creation, SNS publish).
 
+## Production SMS to Singapore numbers
+Currently the account is in the **SNS SMS sandbox** — SMS only delivers to verified numbers. To send to any Singapore number:
+1. **Request production access** (End User Messaging console → sandbox → request) — AWS reviews.
+2. **Register a Singapore Sender ID** with SSIR/SGNIC (needs a SG business UEN; one-time + annual fee; days–weeks lead time). Once approved, deploy with `--parameter-overrides SmsSenderId=<ID>` — the `sendOtp` Lambda then sends transactional SMS under that Sender ID.
+3. **Raise the SMS spend limit** (Service Quotas) above the default ~$1/month.
+
 ## Known gaps
 - Staff auth not implemented (table exists, unused)
-- OTP requests are not rate-limited (a client could spam `/auth/send-otp`)
 - No automated tests
-- SMS cost: AWS accounts have a default $1/month SNS SMS spend cap — fine for testing, raise via Service Quotas for production volume
