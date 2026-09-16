@@ -1,25 +1,30 @@
+import { useState } from 'react'
 import { Stack, Text } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout'
 import { InputBox, SubmitButton, DatePickerBox } from '../components/basic'
 import { useInputValue } from '../hooks/useInputValue'
-import { useRewards } from '../context/RewardsContext'
+import { enrollCustomer } from '../api/client'
 import { PersonIcon, SearchIcon, MailIcon } from '../components/icons/StaffIcons'
 
 export default function StaffEnrollMember() {
   const navigate = useNavigate()
-  const { enrollCustomer } = useRewards()
   const fullName = useInputValue('')
   const phone = useInputValue('')
   const email = useInputValue('')
   const dob = useInputValue('')
+  const [error, setError] = useState(null)
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     const name = (fullName.value || 'New Member').trim()
     const rawPhone = phone.value.trim()
     const fullPhone = rawPhone.startsWith('+') ? rawPhone : `+65 ${rawPhone}`
-    enrollCustomer(fullPhone, name)
-    navigate(`/staff-customer-profile?phone=${encodeURIComponent(fullPhone)}`)
+    try {
+      await enrollCustomer(fullPhone, name, email.value.trim(), dob.value)
+      navigate(`/staff-customer-profile?phone=${encodeURIComponent(fullPhone)}`)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -71,6 +76,11 @@ export default function StaffEnrollMember() {
         </Stack>
 
         <SubmitButton onClick={handleEnroll}>Enroll Member</SubmitButton>
+        {error && (
+          <Text color="red.400" textAlign="center">
+            {error}
+          </Text>
+        )}
       </Stack>
     </Layout>
   )

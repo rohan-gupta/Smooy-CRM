@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { HStack, Stack, Text } from '@chakra-ui/react'
 import { GlassCard, QrButton, StampCard } from './RewardsComponents'
-import { useRewards } from '../../context/RewardsContext'
+import { getCustomer } from '../../api/client'
 import { REWARD_STATUS_MAP } from '../../constants/rewardStatus'
+
+const TOTAL_STAMPS = 10
 
 function RewardRow({ icon, label, desc, statusLabel, statusColor }) {
   return (
@@ -33,11 +36,26 @@ function RewardRow({ icon, label, desc, statusLabel, statusColor }) {
 }
 
 export default function CustomerRewardsCard({ phone }) {
-  const { getCustomer, totalStamps } = useRewards()
-  const customer = getCustomer(phone)
+  const [customer, setCustomer] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    getCustomer(phone)
+      .then((data) => { if (!cancelled) setCustomer(data) })
+      .catch(() => { if (!cancelled) setCustomer(null) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [phone])
+
   const customerName = customer?.name || 'Guest'
   const stamps = customer?.stamps || 0
   const rewards = customer?.rewards || []
+  const totalStamps = TOTAL_STAMPS
+
+  if (loading) {
+    return <Text textAlign="center" color="white">Loading...</Text>
+  }
 
   return (
     <Stack gap="1.5vh">
